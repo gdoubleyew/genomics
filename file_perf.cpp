@@ -5,13 +5,19 @@
 #include <vector>
 #include <chrono>
 #include <getopt.h>
-#include <filesystem>
 #include <regex>
 #include <cstdio>
 
+#ifdef __linux__
+  #include <experimental/filesystem>
+  namespace fs = std::experimental::filesystem;
+#elif __APPLE__
+  #include <filesystem>
+  namespace fs = std::__fs::filesystem;
+#endif
+
 using namespace std;
 using namespace std::chrono;
-namespace fs = std::__fs::filesystem;
 
 string baseDir = "/tmp/files";
 string fileBaseName = "test";
