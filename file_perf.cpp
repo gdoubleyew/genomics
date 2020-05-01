@@ -37,7 +37,7 @@ bool create_file(const string &strFilename, const string &text, const size_t siz
   return true;
 }
 
-bool append_file(const string &strFilename, const string &text) {
+bool append_closed_file(const string &strFilename, const string &text) {
   fstream fp;
   fp.open(strFilename.c_str(), ios_base::out | ios_base::app);
   if (!fp.is_open()) {
@@ -80,17 +80,25 @@ void create_sparse_files(vector<string> &fileNames, size_t size) {
   return;
 }
 
-void append_files(vector<string> &fileNames, int append_id) {
+void append_closed_files(vector<string> &fileNames, int append_id) {
   cout << "Append Files:" << endl;
   for (auto fileName : fileNames) {
     string text = "append " + to_string(append_id) + '\n';
-    append_file(fileName, text);
+    append_closed_file(fileName, text);
   }
   return;
 }
 
-bool append_already_open(vector<string> &fileNames, int append_id) {
-  cout << "Append Open:" << endl;
+bool append_open_files(vector<string> &fileNames, vector<unique_ptr<fstream>> &fpVec, int append_id) {
+  string text = "append " + to_string(append_id) + '\n';
+  for (int i=0; i< fpVec.size(); i++) {
+    fpVec[i]->write((char *) text.c_str(), text.size());
+  }
+  return true;
+}
+
+bool append_first_file(vector<string> &fileNames, int append_id) {
+  cout << "Append first:" << endl;
   string text = "append " + to_string(append_id) + '\n';
   fstream fp;
   fp.open(fileNames[0].c_str(), ios_base::out | ios_base::app);
@@ -121,6 +129,7 @@ int create_flag = 0;
 int create_sparse_flag = 0;
 int append_flag = 0;
 int append_open_flag = 0;
+int append_first_flag = 0;
 int read_flag = 0;
 int rm_flag = 0;
 
@@ -129,6 +138,7 @@ static struct option long_options[] =
   {"create", 0, &create_flag, 1},
   {"create_sparse", 0, &create_sparse_flag, 1},
   {"append", 0, &append_flag, 1},
+  {"append_first", 0, &append_first_flag, 1},
   {"append_open", 0, &append_open_flag, 1},
   {"read", 0, &read_flag, 1},
   {"rm", 0, &rm_flag, 1},
@@ -186,18 +196,40 @@ int main(int argc, char** argv) {
 
   if (append_flag) {
     auto start = high_resolution_clock::now();
-    append_files(fileNames, 1);
+    append_closed_files(fileNames, 1);
     auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     auto timems = duration.count() / 1000.0;
     cout << "Append time: " << timems << " ms" << endl;
   }
 
-  if (append_open_flag) {
+  if (append_first_flag) {
     auto start = high_resolution_clock::now();
-    append_already_open(fileNames, 1);
+    append_first_file(fileNames, 1);
     auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     auto timems = duration.count() / 1000.0;
-    cout << "Append_open time: " << timems << " ms" << endl;
+    cout << "append_first time: " << timems << " ms" << endl;
+  }
+
+  if (append_open_flag) {
+    // open all files and send the filehandles
+    vector<unique_ptr<fstream>>fpVec(fileNames.size());
+    // vector<unique_ptr<fstream>>fpVec;
+    for (int i = 0; i < fileNames.size(); i++) {
+      // unique_ptr<fstream> fp(new fstream);
+      // fpVec.push_back(move(fp));
+      fpVec[i] = unique_ptr<fstream>(new fstream);
+      // fpVec[i] = move(unique_ptr<fstream>(new fstream));
+      fpVec[i]->open(fileNames[i].c_str(), ios_base::out | ios_base::app);
+      if (!fpVec[i]->is_open()) {
+        cout << "failed to open " << fileNames[i] << endl;
+        exit(-1);
+      }
+    }
+    auto start = high_resolution_clock::now();
+    append_open_files(fileNames, fpVec, 1);
+    auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+    auto timems = duration.count() / 1000.0;
+    cout << "append_open time: " << timems << " ms" << endl;
   }
 
   if (read_flag) {
