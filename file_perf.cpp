@@ -1,3 +1,7 @@
+/*
+Program to test filesystem performance when creating, appending and reading
+many files. Test time to open and append vs. append to an already opened file.
+*/
 #include <iostream>
 #include <fstream>
 #include <sstream> //stringstream

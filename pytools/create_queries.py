@@ -39,7 +39,7 @@ def parse_gmt(filename, min_gene_count, max_gene_count):
     return groups
 
 
-def create_queries(groups, query_pct, outBaseFilename):
+def create_queries(groups, query_pct, max_query_genes, outBaseFilename):
     """
     Create queries out of groups of biologically informative gene sets.
     Each group is a set of genes that are correlated with each other.
@@ -55,13 +55,20 @@ def create_queries(groups, query_pct, outBaseFilename):
     for group in groups:
         # determine the number of genes that will be used for each query
         group.queries = []
-        for qpct in query_pct:
+        num_query_genes = [(group.size * qpct / 100.0) for qpct in query_pct]
+        if max(num_query_genes) > max_query_genes:
+            # Using the max query_pct, calculate a group.size that will keep the
+            # number of query genes below max_query_genes
+            max_qpct = max(query_pct)
+            gsize = max_query_genes * 100.0 / max_qpct
+            num_query_genes = [(gsize * qpct / 100.0) for qpct in query_pct]
+        for qnum in num_query_genes:
             query = StructDict()
-            qnum = group.size * qpct / 100.0
-            if qpct > 50:
-                qnum = math.floor(qnum)
-            else:
+            if qnum < 10:
                 qnum = math.ceil(qnum)
+            else:
+                qnum = math.floor(qnum)
+            assert qnum <= max_query_genes
             query.qnum = qnum
             # create a random list of index values for the query genes
             query.q_indicies = random.sample(range(group.size), qnum)
@@ -77,9 +84,9 @@ def create_queries(groups, query_pct, outBaseFilename):
             query.genes = [group.genes[i] for i in query.q_indicies]
             query.results = [group.genes[i] for i in query.res_indicies]
             # write the query genes to a file
-            queryFH.write(",".join(query.genes) + "\n")
+            queryFH.write("    ".join(query.genes) + "\n")
             # write the result genes to a file
-            goldStdFH.write(",".join(query.results) + "\n")
+            goldStdFH.write("    ".join(query.results) + "\n")
             # write the group to a file
             groupFH.write("\t".join([group.id, group.desc]) + "\n")
             # groupFH.write("\t".join(group.genes) + "\n")
@@ -103,6 +110,8 @@ if __name__ == "__main__":
                            help='input file with list of correlated genes')
     argParser.add_argument('--output-file-base', '-o', type=str, required=True,
                            help='input file with list of correlated genes')
+    argParser.add_argument('--max-query-genes', default="50", type=int,
+                           help='max number of genes allowed per query (seekcentral limit), default 50')
     args = argParser.parse_args()
 
     # Get the percentage of genes from a group to use for the query from the args
@@ -111,5 +120,5 @@ if __name__ == "__main__":
         format(args.min_gene_count, args.max_gene_count, query_pct))
 
     groups = parse_gmt(args.input_file, args.min_gene_count, args.max_gene_count)
-    create_queries(groups, query_pct, args.output_file_base)
+    create_queries(groups, query_pct, args.max_query_genes, args.output_file_base)
     # print(groups)
