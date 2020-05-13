@@ -13,7 +13,7 @@ import re
 import math
 import random
 import argparse
-from structDict import StructDict
+from struct_dict import StructDict
 
 
 def parse_gmt(filename, min_gene_count, max_gene_count):
