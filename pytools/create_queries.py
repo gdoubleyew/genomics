@@ -57,7 +57,7 @@ def create_queries(groups, query_pct, max_query_genes, outBaseFilename):
         group.queries = []
         num_query_genes = [(group.size * qpct / 100.0) for qpct in query_pct]
         if max(num_query_genes) > max_query_genes:
-            # Using the max query_pct, calculate a group.size that will keep the
+            # Using the max(query_pct), calculate a group.size that will keep the
             # number of query genes below max_query_genes
             max_qpct = max(query_pct)
             gsize = max_query_genes * 100.0 / max_qpct
