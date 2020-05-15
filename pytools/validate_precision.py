@@ -9,6 +9,8 @@ Previous name: cmp_res_gold.py
 """
 
 import sys
+import collections
+import random
 import argparse
 
 
@@ -46,32 +48,32 @@ if __name__ == "__main__":
     # print(resvals)
 
     # for each gold val, find out the index position in the resvals
-    idxvals = []
+    idxvals = {}
     num_not_found = 0
     for g in goldvals:
         try:
             idx = resvals.index(g)
+            idxvals[idx] = g
         except ValueError:
             num_not_found += 1
             print("missing {}".format(g))
-        idxvals.append(idx)
 
     # check one
-    checkidx = int(len(idxvals)/2)
-    assert resvals[idxvals[checkidx]] == goldvals[checkidx]
+    checkidx = random.choice(list(idxvals.keys()))
+    assert resvals[checkidx] == idxvals[checkidx]
 
     # then sort the gold val index positions
-    idxvals.sort()
-    print(idxvals)
+    sorted_vals = collections.OrderedDict(sorted(idxvals.items()))
+    print(sorted_vals)
 
     # then calculate the precision at each sorted gold val
     precisionVals = []
     matches = 0
-    for i in idxvals:
+    for i, g in sorted_vals.items():
         matches += 1
         precision = matches / (i+1)
         precisionVals.append(round(precision, 5))
-        print("precision: {:.6f}".format(precision))
+        print("precision: {:.6f}, {}".format(precision, g))
 
     print("missing results {}".format(num_not_found))
 
@@ -79,4 +81,4 @@ if __name__ == "__main__":
     extPrecision = [float(x) for x in grouplines[args.query_index].split()]
     for i in range(len(precisionVals)):
         print("{}: {}-{}: diff {}".format(i, precisionVals[i], extPrecision[i], precisionVals[i]-extPrecision[i]))
-    print("lenghts: {}, {}".format(len(precisionVals), len(extPrecision)))
+    print("lengths: {}, {}".format(len(precisionVals), len(extPrecision)))
