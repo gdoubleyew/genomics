@@ -15,6 +15,7 @@ if [ "$1" == "" ]; then
 fi
 
 query_file=$1
+# Assume gold standard file has same name as query file but substitute string gold for query
 gold_file=${query_file/query/gold}
 echo "using query file $query_file, goldStd file $gold_file"
 
@@ -37,6 +38,8 @@ conda activate genomics
 if true; then
   python $pytools/eval_precison.py -t human -s /Genomics/ogtr03/qzhu/seek_sleipnir_build/bin -g $gold_file -q $query_file -o $tmp_dir 2> $tmp_dir/out.precision.txt
 fi
+
+# TODO - also test order of results and dataset ordered results
 
 # Step 3 Compare the result to the expected result
 # TODO
