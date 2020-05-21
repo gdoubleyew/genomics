@@ -82,6 +82,8 @@ if __name__=="__main__":
     null_file = setting_dir + "/null"
     exclude_file = null_file
 
+    # The gold standard genes are in a single file for all queries, but for SeekEvaluator
+    #  we need a file per query with the gold standard genes and ideally in the results dir
     gold_std_genes = read_genes(gold_std_file)
     write_goldstd(gold_std_genes, result_dir)
 
