@@ -25,7 +25,7 @@ def file_read(filename):
     return lines
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     # Iterate through a directory of query results (from SeekMiner)
     # Group queries by size (number of genes per query)
     # Write out list files (containing lists of filenames in the query groups)
