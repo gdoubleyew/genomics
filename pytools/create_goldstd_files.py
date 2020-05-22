@@ -3,8 +3,11 @@ Transform a file that has the gold standard genes for a set of queries, one per 
 To a set of files where each file has the gold standard genes for one query.
 Number the output file by the line number in the input file starting at 0.
 '''
+import os
+import sys
 import argparse
-from .utils import read_genes, write_goldstd
+sys.path.append(os.path.dirname(__file__))
+from utils import read_genes, write_goldstd
 
 
 if __name__ == "__main__":

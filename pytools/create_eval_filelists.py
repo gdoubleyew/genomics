@@ -45,11 +45,11 @@ if __name__ == "__main__":
     # filelists to create
     filelists = ['query', 'gscore', 'gold']
 
-    filepattern = os.path.join(args.inputdir, r'*.query')
+    filepattern = os.path.join(args.inputdir, r'[0-9]*.query')
     filecount = 0
     for queryfile in glob.iglob(filepattern):
         filecount += 1
-        print(queryfile)
+        # print(queryfile)
         # read file to find query size
         lines = file_read(queryfile)
         assert len(lines) == 1
@@ -63,11 +63,11 @@ if __name__ == "__main__":
             lfile = os.path.join(path, newbase)
             file_appendline(listname, lfile)
         # Add a line to the include and exclude file
-        includefile = os.path.join(args.outputdir, 'filelist_q{}.include'.format(num_genes))
-        excludefile = os.path.join(args.outputdir, 'filelist_q{}.exclude'.format(num_genes))
         # include all genes given in gene file
+        includefile = os.path.join(args.outputdir, 'filelist_q{}.include'.format(num_genes))
         file_appendline(includefile, args.genefile)
         # exclude all genes in the query file
+        excludefile = os.path.join(args.outputdir, 'filelist_q{}.exclude'.format(num_genes))
         file_appendline(excludefile, queryfile)
 
     if filecount == 0:
