@@ -3,6 +3,17 @@ Utility helper functions for common use by other scripts
 '''
 
 
+def file_read(filename):
+    with open(filename, 'r') as fp:
+        lines = fp.readlines()
+    return lines
+
+
+def file_appendline(filename, data):
+    with open(filename, 'a') as fp:
+        fp.write(data+'\n')
+
+
 def read_genes(gene_file):
     '''
     Read in file with sets of genes, one set per line.

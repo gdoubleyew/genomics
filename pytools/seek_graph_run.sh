@@ -14,6 +14,8 @@ qcounts=("2,4,6,8,10" "2,4,6,8,10" "2,6,10,14,18")
 qmins=(20 40  100)
 qmaxs=(40 100 300)
 
+recall_pct=0.1
+
 source ~/.bashrc
 
 # Produce the query files and gold standard files
@@ -91,14 +93,19 @@ if false; then
       ./bin/SeekEvaluator -S $rdir/filelist_q$n.gold -G $rdir/filelist_q$n.gscore \
       -Q $rdir/filelist_q$n.query -X $rdir/filelist_q$n.exclude \
       -Y $rdir/filelist_q$n.include -i $setdir/gene_map.txt \
-      -d /tmp/out -M -B --pr -f --x_per 0.1 &>> $outfile
+      -d /tmp/out -M -B --pr -f --x_per $recall_pct &>> $outfile
     done
   done
   popd
 fi
 
-# 4 - Create the precision over recall plot. 
-# Use matplotlib copy the files locally to write the script
+# 4 - Create the precision over recall plot.
+if true; then
+  for group in ${qgroups[*]}; do
+    rdir=$gdir/results/$group
+    python plot_seek.py -i $rdir -o $rdir -p $recall_pct*100
+  done
+fi
 
 
 # Run SeekEvaluator again with different options

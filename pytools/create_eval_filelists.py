@@ -10,19 +10,11 @@ include files, exclude files
 '''
 
 import os
+import sys
 import glob
 import argparse
-
-
-def file_appendline(filename, data):
-    with open(filename, 'a') as fp:
-        fp.write(data+'\n')
-
-
-def file_read(filename):
-    with open(filename, 'r') as fp:
-        lines = fp.readlines()
-    return lines
+sys.path.append(os.path.dirname(__file__))
+from utils import file_appendline, file_read
 
 
 if __name__ == "__main__":

@@ -13,28 +13,8 @@ Adapted by: gwallace
 import os
 import sys
 import argparse
-from .utils import read_genes, write_goldstd
-
-
-# def read_genes(gene_file):
-#     '''
-#     Read in file with sets of genes, one set per line.
-#     Return a list of lists containing the gene sets.
-#     '''
-#     f = open(gene_file)
-#     groups = []
-#     for l in f:
-#         l = l.rstrip("\n")
-#         groups.append(l)
-#     f.close()
-#     return groups
-#
-#
-# def write_goldstd(goldstd, outdir):
-#     for i, g in enumerate(goldstd):
-#         fw = open("%s/%d.gold" % (outdir, i), "w")
-#         fw.write(g + "\n")
-#         fw.close()
+sys.path.append(os.path.dirname(__file__))
+from utils import read_genes, write_goldstd
 
 
 if __name__ == "__main__":
