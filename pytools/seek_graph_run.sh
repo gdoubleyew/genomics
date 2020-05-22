@@ -14,7 +14,7 @@ qcounts=("2,4,6,8,10" "2,4,6,8,10" "2,6,10,14,18")
 qmins=(20 40  100)
 qmaxs=(40 100 300)
 
-recall_pct=0.1
+recall_pct=0.5
 
 source ~/.bashrc
 
@@ -101,9 +101,12 @@ fi
 
 # 4 - Create the precision over recall plot.
 if true; then
+  if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
+    conda activate genomics
+  fi
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
-    python plot_seek.py -i $rdir -o $rdir -p $recall_pct*100
+    python plot_seek.py -i $rdir -o $rdir -p $recall_pct
   done
 fi
 

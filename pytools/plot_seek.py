@@ -50,10 +50,11 @@ def plot_group(inputdir, outputdir, recall_pct):
     plt.fill_between(qsizes, quartile_1, quartile_3, color="gray")
     plt.title('Processes {} genes'.format(group))
     plt.xlabel('Query size')
-    plt.ylabel('Fold precision at {} over random'.format(recall_pct))
+    plt.ylabel('Fold precision at {}% over random'.format(recall_pct))
     # plt.draw()
     # plt.pause(1)
-    outputfile = os.path.join(outputdir, '{}.pdf'.format(group))
+    filename = "{}r{}.pdf".format(group, recall_pct)
+    outputfile = os.path.join(outputdir, filename)
     plt.savefig(outputfile)
 
 
@@ -64,8 +65,11 @@ if __name__ == "__main__":
                            help='input directory where the SeekEvaluator results are')
     argParser.add_argument('--result-dir', '-o', type=str, required=True,
                            help='directory where result files will be written')
-    argParser.add_argument('--recall-pct', '-p', type=str, required=True,
+    argParser.add_argument('--recall-pct', '-p', type=float, required=True,
                            help='Recall depth percent as specified in the SeekMiner run')
     args = argParser.parse_args()
 
-    plot_group(args.input_dir, args.result_dir, args.recall_pct)
+    if args.recall_pct < 1:
+        args.recall_pct *= 100
+
+    plot_group(args.input_dir, args.result_dir, int(args.recall_pct))
