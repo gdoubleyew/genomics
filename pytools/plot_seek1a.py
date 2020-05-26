@@ -10,8 +10,21 @@ sys.path.append(os.path.dirname(__file__))
 from utils import file_appendline, file_read
 from struct_dict import StructDict
 
-
+# Filename pattern output from SeekEvaluator that we will read in to plot
 filebase = "result_qgroup."
+
+
+def save_vals(results, filename):
+    qsizes = list(results.keys())
+    qsizes.sort()
+    with open(filename, 'w') as fp:
+        for i in qsizes:
+            vals = results[i]
+            outline = "{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(
+                i, vals.min, vals.max, vals.quart1, vals.quart2, vals.quart3
+            )
+            fp.write(outline)
+
 
 def plot_group(inputdir, outputdir, recall_pct):
     filecount = 0
@@ -26,17 +39,25 @@ def plot_group(inputdir, outputdir, recall_pct):
         lines = file_read(resultfile)
         # 1st line is min/max
         # 2nd line is 1st, 2nd, 3rd quartile
+        minmax = [float(x) for x in lines[0].split()]
         quartiles = [float(x) for x in lines[1].split()]
-        res[qsize] = quartiles
+        vals = StructDict(
+                {'min': minmax[0],
+                 'max': minmax[1],
+                 'quart1': quartiles[0],
+                 'quart2': quartiles[1],
+                 'quart3': quartiles[2]}
+                )
+        res[qsize] = vals
         filecount += 1
 
     # create an array of result values per query size
     qsizes = list(res.keys())
     qsizes.sort()
     print(qsizes)
-    quartile_1 = [res[qsize][0] for qsize in qsizes]
-    quartile_2 = [res[qsize][1] for qsize in qsizes]
-    quartile_3 = [res[qsize][2] for qsize in qsizes]
+    quartile_1 = [res[qsize]['quart1'] for qsize in qsizes]
+    quartile_2 = [res[qsize]['quart2'] for qsize in qsizes]
+    quartile_3 = [res[qsize]['quart3'] for qsize in qsizes]
     print(res)
     print(quartile_1)
     print(quartile_2)
@@ -56,7 +77,8 @@ def plot_group(inputdir, outputdir, recall_pct):
     filename = "{}r{}.pdf".format(group, recall_pct)
     outputfile = os.path.join(outputdir, filename)
     plt.savefig(outputfile)
-
+    resfile = os.path.join(outputdir, filename.replace('pdf', 'txt'))
+    save_vals(res, resfile)
 
 
 if __name__ == "__main__":

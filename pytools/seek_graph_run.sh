@@ -6,6 +6,8 @@ seekdir="/data/gwallace/seek/Seek"
 setdir="/Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human"
 pytools="/r04/gwallace/src/genomics/pytools"
 
+recall_pct=0.5
+
 # for group sizes 20-40 select query strings of size 2-10 (by 2s)
 # for group sizes 40-100 select query strings of size 2-20 (by 2s)
 # for group sizes 100-300 select query strings of size 2-20 (by 4s)
@@ -14,15 +16,26 @@ qcounts=("2,4,6,8,10" "2,4,6,8,10" "2,6,10,14,18")
 qmins=(20 40  100)
 qmaxs=(40 100 300)
 
-recall_pct=0.5
+# check if directories exist
+if [ ! -d $gdir || ! -d $seekdir ]; then
+  echo "Directory doesn't exist $gdir or $seekdir"
+  exit(-1)
+fi
+
+function check_dir() {
+  if [ ! -d $1 ]; then
+    mkdir -p $1
+  fi
+}
 
 source ~/.bashrc
+if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
+  conda activate genomics
+fi
 
 # Produce the query files and gold standard files
 if false; then
-  if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
-    conda activate genomics
-  fi
+  check_dir("$gdir/queries")
   for i in ${!qgroups[@]}; do
     echo "${qgroups[$i]} ${qcounts[$i]}"
     cmd="$pytools/create_queries.py -min ${qmins[$i]} -max ${qmaxs[$i]} \
@@ -40,6 +53,7 @@ if false; then
     echo "################# running group $group #################"
     query_file=$gdir/queries/$group.query.txt
     result_dir=$gdir/results/$group
+    check_dir($result_dir)
     # Run the query - produces binary file results
     time ./bin/SeekMiner -x dataset.map -i gene_map.txt -d db.combined \
       -p prep.combined -P platform.combined -Q quant2 -u sinfo.combined -n 1000 -b 200  \
@@ -51,9 +65,6 @@ fi
 
 # Genereate filelists need for SeekEvaluator
 if false; then
-  if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
-    conda activate genomics
-  fi
   # Create the individual query gold standard files in the results directory
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
@@ -101,12 +112,11 @@ fi
 
 # 4 - Create the precision over recall plot.
 if true; then
-  if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
-    conda activate genomics
-  fi
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
-    python plot_seek.py -i $rdir -o $rdir -p $recall_pct
+    outdir=$gdir/results/out
+    check_dir($outdir)
+    python plot_seek1a.py -i $rdir -o $rdir -p $recall_pct
   done
 fi
 
