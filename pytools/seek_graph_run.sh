@@ -17,9 +17,9 @@ qmins=(20 40  100)
 qmaxs=(40 100 300)
 
 # check if directories exist
-if [ ! -d $gdir || ! -d $seekdir ]; then
+if [ ! -d $gdir ] || ! [ -d $seekdir ]; then
   echo "Directory doesn't exist $gdir or $seekdir"
-  exit(-1)
+  exit -1
 fi
 
 function check_dir() {
@@ -33,9 +33,9 @@ if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
   conda activate genomics
 fi
 
-# Produce the query files and gold standard files
-if false; then
-  check_dir("$gdir/queries")
+# Step 1: Produce the query files and gold standard files
+if true; then
+  check_dir "$gdir/queries"
   for i in ${!qgroups[@]}; do
     echo "${qgroups[$i]} ${qcounts[$i]}"
     cmd="$pytools/create_queries.py -min ${qmins[$i]} -max ${qmaxs[$i]} \
@@ -45,15 +45,15 @@ if false; then
   done
 fi
 
-# Run the queries using SeekMiner for each sub-group in a different output directory (time process)
-if false; then
+# Step 2: Run the queries using SeekMiner for each sub-group in a different output directory (time process)
+if true; then
   pushd $seekdir
   source seek_env
   for group in ${qgroups[*]}; do
     echo "################# running group $group #################"
     query_file=$gdir/queries/$group.query.txt
     result_dir=$gdir/results/$group
-    check_dir($result_dir)
+    check_dir $result_dir
     # Run the query - produces binary file results
     time ./bin/SeekMiner -x dataset.map -i gene_map.txt -d db.combined \
       -p prep.combined -P platform.combined -Q quant2 -u sinfo.combined -n 1000 -b 200  \
@@ -63,8 +63,8 @@ if false; then
   popd
 fi
 
-# Genereate filelists need for SeekEvaluator
-if false; then
+# Step 3: Genereate filelists need for SeekEvaluator
+if true; then
   # Create the individual query gold standard files in the results directory
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
@@ -83,9 +83,9 @@ if false; then
   done
 fi
 
-# Run SeekEvaluator to get the precision at specified recall depth
+# Step 4: Run SeekEvaluator to get the precision at specified recall depth
 #  it will generate the aggregate min/max and quartiles for each query size
-if false; then
+if true; then
   pushd $seekdir
   source seek_env
   for i in ${!qgroups[@]}; do
@@ -110,13 +110,13 @@ if false; then
   popd
 fi
 
-# 4 - Create the precision over recall plot.
+# Step 5: Create the precision over recall plot.
 if true; then
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
     outdir=$gdir/results/out
-    check_dir($outdir)
-    python plot_seek1a.py -i $rdir -o $rdir -p $recall_pct
+    check_dir $outdir
+    python plot_seek1a.py -i $rdir -o $outdir -p $recall_pct
   done
 fi
 

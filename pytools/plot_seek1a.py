@@ -18,6 +18,7 @@ def save_vals(results, filename):
     qsizes = list(results.keys())
     qsizes.sort()
     with open(filename, 'w') as fp:
+        fp.write("qsize min max quart1 quart2 quart3\n")
         for i in qsizes:
             vals = results[i]
             outline = "{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(
