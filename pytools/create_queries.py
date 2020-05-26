@@ -13,29 +13,7 @@ import math
 import random
 import argparse
 from struct_dict import StructDict
-
-
-def parse_gmt(filename, min_gene_count, max_gene_count):
-    """
-    Parse a file that has a correlated gene group per line.
-    Only keep groups that meet the min, max gene count criteria.
-    """
-    groups = []
-    with open(filename, 'r') as fp:
-        for line in fp:
-            vals = line.rstrip(os.linesep).split("\t")
-            group_id = vals[0]
-            desc = vals[1]
-            genes = vals[2:]
-            mtch = re.search(r'\((\d+)\)', desc)
-            if mtch is None:
-                raise ValueError("Description missing gene count, {}".format(desc))
-            num_genes = int(mtch.group(1))
-            assert len(genes) == num_genes
-            if num_genes >= min_gene_count and num_genes <= max_gene_count:
-                group = StructDict({'id': group_id, 'desc': desc, 'genes': genes, 'size': num_genes})
-                groups.append(group)
-    return groups
+from utils import parse_gmt
 
 
 def create_queries(groups, query_count, max_query_genes, outBaseFilename, query_pct=None):
