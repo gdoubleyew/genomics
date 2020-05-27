@@ -75,18 +75,26 @@ if true; then
     python $pytools/create_goldstd_files.py -g $gfile -o $rdir
   done
 
-  # Create the filelists for use by SeekEvaluator
+  rdir=$gdir/results
+  # Create the filelists for use by SeekEvaluator plot 1a
   for group in ${qgroups[*]}; do
     echo "Create filelists for group $group"
-    python $pytools/create_eval_filelists.py \
-      -i /data/gwallace/seek/results/$group \
-      -o /data/gwallace/seek/results/$group \
+    python $pytools/create_plot1a_filelists.py \
+      -i $rdir/$group \
+      -o $rdir/$group \
       -g /Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt
   done
+
+  # Create the filelists for use by SeekEvaluator plot 1c
+  rdir=$gdir/results
+  python $pytoosl/create_plot1c_filelists.py \
+    -i $rdir/q20_40,$rdir/q40_100,$rdir/q100_300 \
+    -o $rdir \
+    -g /Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt
 fi
 
-# Step 4: Run SeekEvaluator to get the precision at specified recall depth
-#  it will generate the aggregate min/max and quartiles for each query size
+# Step 4: Run SeekEvaluator to get the aggregate precision at different query sizes
+#  it will generate the aggregate min/max and quartiles for each query size for plot 1a
 if true; then
   pushd $seekdir
   source seek_env
@@ -102,12 +110,33 @@ if true; then
       echo -n > $outfile
       # Parameters are: -M multiquery, -B (agg_quartile) min/max quartiles,
       # --pr precision at x depth, --x_per recall depth or pr in percent, -f fold over random
-      # For fold_over_random I'm not sure why it doesn't divide by change of random choice * recall depth.
       ./bin/SeekEvaluator -S $rdir/filelist_q$n.gold -G $rdir/filelist_q$n.gscore \
       -Q $rdir/filelist_q$n.query -X $rdir/filelist_q$n.exclude \
       -Y $rdir/filelist_q$n.include -i $setdir/gene_map.txt \
       -d /tmp/out -M -B --pr -f --x_per $recall_pct &>> $outfile
     done
+  done
+  popd
+fi
+
+# Run SeekEvaluator to get the aggregate precision at different recall depths
+#  it will generate the aggregate min/max and quartiles for each query size for plot 1c
+if true; then
+  pushd $seekdir
+  source seek_env
+  rdir=$gdir/results
+  recall_depths=(.01 .025 .05 .1 .25 .5 1)
+  for depth in ${recall_depths[*]}; do
+    echo "Running SeekEvaluator for depth $depth"
+    outfile=$rdir/result_recall_curve.$depth
+    # truncate the output file
+    echo -n > $outfile
+    # Parameters are: -M multiquery, -B (agg_quartile) min/max quartiles,
+    # --pr precision at x depth, --x_per recall depth or pr in percent, -f fold over random
+    ./bin/SeekEvaluator -S $rdir/filelist_seek1c.gold -G $rdir/filelist_seek1c.gscore \
+    -Q $rdir/filelist_seek1c.query -X $rdir/filelist_seek1c.query \
+    -Y $rdir/filelist_seek1c.include -i  $setdir/gene_map.txt \
+     -d /tmp/out -M -B --pr -f --x_per $depth &>> $outfile
   done
   popd
 fi

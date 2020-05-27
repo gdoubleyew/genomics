@@ -34,6 +34,8 @@ if __name__ == "__main__":
             if group is not None:
                 fp.write(group['line'])
                 count += 1
+            else:
+                print('missing: {}\n'.format(desc))
 
     print("wrote {} groups".format(count))
 
