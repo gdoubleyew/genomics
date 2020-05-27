@@ -6,7 +6,9 @@ seekdir="/data/gwallace/seek/Seek"
 setdir="/Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human"
 pytools="/r04/gwallace/src/genomics/pytools"
 
-recall_pct=0.5
+recall_pct=0.1
+# gmt_file="$gdir/human_go_slim.gmt"
+gmt_file="$gdir/qian_go_slim.gmt"
 
 # for group sizes 20-40 select query strings of size 2-10 (by 2s)
 # for group sizes 40-100 select query strings of size 2-20 (by 2s)
@@ -39,7 +41,7 @@ if true; then
   for i in ${!qgroups[@]}; do
     echo "${qgroups[$i]} ${qcounts[$i]}"
     cmd="$pytools/create_queries.py -min ${qmins[$i]} -max ${qmaxs[$i]} \
-      -c ${qcounts[$i]} -o $gdir/queries/${qgroups[$i]} -i $gdir/human_go_slim.gmt"
+      -c ${qcounts[$i]} -o $gdir/queries/${qgroups[$i]} -i $gmt_file"
     echo $cmd
     python $cmd
   done
@@ -116,7 +118,7 @@ if true; then
     rdir=$gdir/results/$group
     outdir=$gdir/results/out
     check_dir $outdir
-    python plot_seek1a.py -i $rdir -o $outdir -p $recall_pct
+    python $pytools/plot_seek1a.py -i $rdir -o $outdir -p $recall_pct
   done
 fi
 

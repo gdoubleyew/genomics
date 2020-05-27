@@ -30,7 +30,7 @@ if __name__ == "__main__":
         count = 0
         for desc in glist:
             desc = desc.rstrip()
-            group = gmt_dict[desc]
+            group = gmt_dict.get(desc, None)
             if group is not None:
                 fp.write(group['line'])
                 count += 1
