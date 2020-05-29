@@ -14,7 +14,7 @@ gmt_file="$gdir/qian_go_slim.gmt"
 # for group sizes 40-100 select query strings of size 2-20 (by 2s)
 # for group sizes 100-300 select query strings of size 2-20 (by 4s)
 qgroups=("q20_40" "q40_100" "q100_300")
-qcounts=("2,4,6,8,10" "2,4,6,8,10" "2,6,10,14,18")
+qcounts=("2,4,6,8,10" "2,6,10,14,18" "2,6,10,14,18")
 qmins=(20 40  100)
 qmaxs=(40 100 300)
 
@@ -87,7 +87,7 @@ if true; then
 
   # Create the filelists for use by SeekEvaluator plot 1c
   rdir=$gdir/results
-  python $pytoosl/create_plot1c_filelists.py \
+  python $pytools/create_plot1c_filelists.py \
     -i $rdir/q20_40,$rdir/q40_100,$rdir/q100_300 \
     -o $rdir \
     -g /Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt
@@ -125,10 +125,11 @@ if true; then
   pushd $seekdir
   source seek_env
   rdir=$gdir/results
-  recall_depths=(.01 .025 .05 .1 .25 .5 1)
+  recall_depths=(.01 .02 .04 .06 .08 .1 .2 .4 .6 .8 1)
   for depth in ${recall_depths[*]}; do
     echo "Running SeekEvaluator for depth $depth"
-    outfile=$rdir/result_recall_curve.$depth
+    depth_pct=$(echo "$depth * 100 / 1" | bc)
+    outfile=$rdir/result_recall_curve.$depth_pct
     # truncate the output file
     echo -n > $outfile
     # Parameters are: -M multiquery, -B (agg_quartile) min/max quartiles,
@@ -143,12 +144,15 @@ fi
 
 # Step 5: Create the precision over recall plot.
 if true; then
+  outdir=$gdir/results/out
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
-    outdir=$gdir/results/out
     check_dir $outdir
     python $pytools/plot_seek1a.py -i $rdir -o $outdir -p $recall_pct
   done
+
+  rdir=$gdir/results
+  python $pytools/plot_seek1c.py -i $rdir -o $outdir
 fi
 
 

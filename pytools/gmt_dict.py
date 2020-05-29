@@ -4,6 +4,7 @@ from the gmt file and write those to a new file.
 '''
 
 import sys
+import re
 import argparse
 from utils import parse_gmt, file_read
 
@@ -24,18 +25,23 @@ if __name__ == "__main__":
 
     gmt_dict = {}
     for group in gmt:
-        gmt_dict[group['desc']] = group
+        desc = group['desc']
+        desc = desc.lower()
+        desc = re.sub('__', '_', desc)
+        gmt_dict[desc] = group
 
     with open(args.output_file, 'w') as fp:
         count = 0
         for desc in glist:
             desc = desc.rstrip()
+            desc = desc.lower()
+            desc = re.sub('__', '_', desc)
             group = gmt_dict.get(desc, None)
             if group is not None:
                 fp.write(group['line'])
                 count += 1
             else:
-                print('missing: {}\n'.format(desc))
+                print('missing: {}'.format(desc))
 
     print("wrote {} groups".format(count))
 
