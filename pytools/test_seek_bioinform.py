@@ -8,7 +8,8 @@ goldStdPath - full path to known-good output files and gold standard files for t
 outputPath - output directory for the test results
 queryPath - full path to the query input directory
 queryFiles - query files to run (multiple queries per file one query per line), located in query path
-geneFile - file with list of genes to include when evaluating results
+geneFile - file with list of all genes to include
+geneMap - gene map file
 recallPct - Recall depth (in percent) for calculating precision
 '''
 import os
@@ -22,7 +23,7 @@ import create_plot1a_filelists as filelist1a
 import create_plot1c_filelists as filelist1c
 import plot_seek1a as plot1a
 import plot_seek1c as plot1c
-import compare_result_file as cmpfiles
+import compare_result_files as cmpfiles
 
 
 if __name__ == "__main__":
@@ -33,8 +34,10 @@ if __name__ == "__main__":
                            help='Seek Directory')
     argParser.add_argument('--seek-bin', '-b', type=str, required=False,
                            help='Seek binary files')
+    argParser.add_argument('--outputdir', '-o', type=str, required=False,
+                           help='output directory where results will be written')
     # TODO - put this in config file instead
-    argParser.add_argument('--known-good-results', '-g', type=str, required=True,
+    argParser.add_argument('--known-good-results', '-g', type=str, required=False,
                            help='Expected results files from a known-good run')
     args = argParser.parse_args()
 
@@ -45,6 +48,8 @@ if __name__ == "__main__":
         cfg.seekPath = args.seek_dir
     if args.seek_bin is not None:
         cfg.binPath = args.seek_bin
+    if args.outputdir is not None:
+        cfg.outputPath = args.outputdir
 
     utils.checkAndMakePath(cfg.outputPath)
 
@@ -73,7 +78,7 @@ if __name__ == "__main__":
                        '-d {db}/db.combined -p {db}/prep.combined ' \
                        '-P {db}/platform.combined -Q {db}/quant2 ' \
                        '-u {db}/sinfo.combined -n 1000 -b 200  ' \
-                       '-R dataset_size -V CV -I LOI -z z_score -m -M -O ' \
+                       '-R {db}/dataset_size -V CV -I LOI -z z_score -m -M -O ' \
                        '-q {queryfile} -o {resultdir} ' \
                        '&> {resultdir}/seekminer.out'.format(
                          seekminer=seekMinerBin, db=cfg.seekPath,
@@ -82,15 +87,16 @@ if __name__ == "__main__":
         os.system(seekMinerCmd)
 
     # Create filelists in preparation for running SeekEvaluator
-    # create plot 1a filelist
+    # create plot1a filelist
     for queryName in queryNames:
         print('Create filelists for {}'.format(queryName))
+        goldDir = os.path.join(cfg.goldStdPath, queryName)
         resultDir = os.path.join(cfg.outputPath, queryName)
         outputDir = resultDir
-        filelist1a.makePlot1aFilelists(cfg.goldStdPath, resultDir, outputDir,
+        filelist1a.makePlot1aFilelists(goldDir, resultDir, outputDir,
                                        cfg.geneFile)
 
-    # create plot 1c filelist
+    # create plot1c filelist
     queryNamesStr = ','.join(map(str, queryNames))
     filelist1c.makePlot1cFilelists(cfg.goldStdPath, cfg.outputPath, cfg.outputPath,
                                    cfg.geneFile, queryNamesStr)
@@ -110,13 +116,13 @@ if __name__ == "__main__":
             resultfile = re.sub('filelist_q', 'result_qgroup.', querylistfilename)
             resultfile = re.sub(r'\.query$', '', resultfile)
             seekEvalCmd = \
-                '{seekevaluator} -S {goldfilelist} -G {gscorefilelist}' \
+                '{seekevaluator} -S {goldfilelist} -G {gscorefilelist} ' \
                 '-Q {queryfilelist} -X {excludefilelist} -Y {includefilelist} ' \
-                '-i {genelist} -d {resultdir} --pr --x_per {recallpct} ' \
+                '-i {genemap} -d {resultdir} --pr --x_per {recallpct} ' \
                 '-M -B -f &> {resultfile}'.format(
                   queryfilelist=querylistfilename, goldfilelist=goldfilelist,
                   gscorefilelist=gscorefilelist, includefilelist=includefilelist,
-                  excludefilelist=excludefilelist, genelist=cfg.geneFile,
+                  excludefilelist=excludefilelist, genemap=cfg.geneMap,
                   resultdir=resultDir, recallpct=cfg.recallPct,
                   resultfile=resultfile, seekevaluator=seekEvaluatorBin
                 )
@@ -132,16 +138,16 @@ if __name__ == "__main__":
             '{seekevaluator} -S {rdir}/filelist_seek1c.gold ' \
             '-G {rdir}/filelist_seek1c.gscore -Q {rdir}/filelist_seek1c.query ' \
             '-X {rdir}/filelist_seek1c.query -Y {rdir}/filelist_seek1c.include ' \
-            '-i {genelist} -M -B -f --pr --x_per {depth} &> {resultfile}'.format(
+            '-i {genemap} -M -B -f --pr --x_per {depth} -d {rdir} &> {resultfile}'.format(
                 seekevaluator=seekEvaluatorBin, rdir=cfg.outputPath,
-                genelist=cfg.geneFile, depth=depth, resultfile=resultfile
+                genemap=cfg.geneMap, depth=depth, resultfile=resultfile
             )
         os.system(seekEvalCmd)
 
     # Create the plots and result csv files
     for queryName in queryNames:
         inputDir = os.path.join(cfg.outputPath, queryName)
-        plot1a.plot_group(inputDir, cfg.outputPath, cfg.recallPct)
+        plot1a.plot_group(inputDir, cfg.outputPath, int(cfg.recallPct*100))
 
     plot1c.plot_curve(cfg.outputPath, cfg.outputPath)
 

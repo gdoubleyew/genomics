@@ -99,6 +99,8 @@ if __name__ == "__main__":
                            help='base filename for output files of query and gold standard genes')
     argParser.add_argument('--max-query-genes', default="50", type=int,
                            help='max number of genes allowed per query (seekcentral limit), default 50')
+    argParser.add_argument('--max-groups', default=None, type=int,
+                           help='max number of groups or queries ')
     args = argParser.parse_args()
 
     # Get the percentage of genes from a group to use for the query from the args
@@ -108,5 +110,5 @@ if __name__ == "__main__":
         format(args.min_gene_count, args.max_gene_count, query_pct, query_count))
 
     groups = parse_gmt(args.input_file, args.min_gene_count, args.max_gene_count)
-    create_queries(groups, query_count, args.max_query_genes, args.output_file_base, query_pct=query_pct)
+    create_queries(groups, query_count, args.max_query_genes, args.output_file_base, query_pct=query_pct, max_groups=args.max_groups)
     # print(groups)
