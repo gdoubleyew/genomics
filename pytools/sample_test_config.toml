@@ -1,0 +1,20 @@
+# Configurations for running test_seek_bioinform
+
+ # full path to seek database installation to test
+seekPath = "/data/seek/Seek"
+# full path to seek binaries to test
+binPath = "/data/seek/bin"
+# full path to the query input directory
+queryPath = "/data/seek/tests/queries"
+# full path to known-good output files and gold standard files for the test
+goldStdPath = "/data/seek/tests/goldOutput"
+# query files to run (multiple queries per file one query per line), located in query path
+queryFiles = ["q20_40.query.txt", "q40_100.query.txt", "q100_300.query.txt"]
+# file with list of genes to include when evaluating results
+geneFile = "/Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt"
+# output directory for the test results
+outputPath = "/tmp/seek_test"
+# Recall depth (in percent) for calculating precision
+recallPct = 0.1
+# Max diff between the test and gold standard results
+maxPctDiff = 10

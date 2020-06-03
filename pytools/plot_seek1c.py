@@ -82,7 +82,7 @@ def plot_curve(inputdir, outputdir):
     filename = "precision_vs_depth.pdf"
     outputfile = os.path.join(outputdir, filename)
     plt.savefig(outputfile)
-    resfile = os.path.join(outputdir, filename.replace('pdf', 'txt'))
+    resfile = os.path.join(outputdir, filename.replace('pdf', 'csv'))
     save_vals(res, resfile)
 
 

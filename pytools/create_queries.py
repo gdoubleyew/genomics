@@ -16,7 +16,8 @@ from struct_dict import StructDict
 from utils import parse_gmt
 
 
-def create_queries(groups, query_count, max_query_genes, outBaseFilename, query_pct=None):
+def create_queries(groups, query_count, max_query_genes, outBaseFilename,
+                   query_pct=None, max_groups=None):
     """
     Create queries out of groups of biologically informative gene sets.
     Each group is a set of genes that are correlated with each other.
@@ -27,7 +28,12 @@ def create_queries(groups, query_count, max_query_genes, outBaseFilename, query_
     queryFH = open(outBaseFilename + '.query.txt', 'w')
     goldStdFH = open(outBaseFilename + '.goldStd.txt', 'w')
     groupFH = open(outBaseFilename + '.group.txt', 'w')
+    num_groups = 0
     for group in groups:
+        if max_groups is not None:
+            if num_groups >= max_groups:
+                break
+        num_groups += 1
         # if query_pct specified, translate that into the number of genes for each query
         if query_pct is not None and len(query_pct) > 0:
             num_query_genes = [(group.size * qpct / 100.0) for qpct in query_pct]

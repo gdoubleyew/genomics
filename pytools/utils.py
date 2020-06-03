@@ -3,7 +3,10 @@ Utility helper functions for common use by other scripts
 '''
 import os
 import re
-from struct_dict import StructDict
+import toml
+import json
+import pathlib
+from struct_dict import StructDict, recurseCreateStructDict
 
 
 def file_read(filename):
@@ -15,6 +18,38 @@ def file_read(filename):
 def file_appendline(filename, data):
     with open(filename, 'a') as fp:
         fp.write(data+'\n')
+
+
+def makeAbsolutePath(path):
+    if not os.path.isabs(path):
+        path = os.path.join(os.getcwd(), path)
+    return path
+
+
+def checkAndMakePath(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+
+def load_config_file(filename):
+    file_suffix = pathlib.Path(filename).suffix
+    if file_suffix == '.json':
+        # load json
+        with open(filename) as fp:
+            cfg_dict = json.load(fp)
+        # to write out config
+        # with open('t1.json', 'w+') as fd:
+        #   json.dump(cfg, fd, indent=2)
+    elif file_suffix == '.toml':
+        # load toml
+        cfg_dict = toml.load(filename)
+        # to write out config
+        # with open('t1.toml', 'w+') as fd:
+        #  toml.dump(cfg, fd)
+    else:
+        raise ValueError("Config file format not recognized (expecting .json or .toml)")
+    cfg_struct = recurseCreateStructDict(cfg_dict)
+    return cfg_struct
 
 
 def read_genes(gene_file):

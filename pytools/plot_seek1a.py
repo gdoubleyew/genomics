@@ -81,7 +81,7 @@ def plot_group(inputdir, outputdir, recall_pct):
     filename = "{}r{}.pdf".format(group, recall_pct)
     outputfile = os.path.join(outputdir, filename)
     plt.savefig(outputfile)
-    resfile = os.path.join(outputdir, filename.replace('pdf', 'txt'))
+    resfile = os.path.join(outputdir, filename.replace('pdf', 'csv'))
     save_vals(res, resfile)
 
 

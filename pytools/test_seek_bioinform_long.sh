@@ -1,4 +1,11 @@
 #!/bin/bash
+# This is the bioinform long test, it tests whether the results are equivalent
+#   in terms of are they biologically informative.
+# This test reproduces the graphs from the Seek paper (supplemental figures 1a and 1c)
+#   and compares the precision over query size and precision over recal curves
+#   from a "gold standard" run against a new run on the database.
+# If the curves agree within 10% then the test is considered passing.
+
 # Reproduce the graphs (supplemental figures 1a and 1c) from the seek paper.
 
 gdir="/data/gwallace/seek"
@@ -36,7 +43,11 @@ if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
 fi
 
 # Step 1: Produce the query files and gold standard files
-if true; then
+# This should only be done once when the test is created against a known
+#   good database. Thereafter set this to false because we use the same queries
+#   for comparing the results to the gold standard.
+makeQueries=false
+if $makeQueries; then
   check_dir "$gdir/queries"
   for i in ${!qgroups[@]}; do
     echo "${qgroups[$i]} ${qcounts[$i]}"
@@ -80,7 +91,8 @@ if true; then
   for group in ${qgroups[*]}; do
     echo "Create filelists for group $group"
     python $pytools/create_plot1a_filelists.py \
-      -i $rdir/$group \
+      -r $rdir/$group \
+      -q $rdir/$group \
       -o $rdir/$group \
       -g /Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt
   done
@@ -88,8 +100,10 @@ if true; then
   # Create the filelists for use by SeekEvaluator plot 1c
   rdir=$gdir/results
   python $pytools/create_plot1c_filelists.py \
-    -i $rdir/q20_40,$rdir/q40_100,$rdir/q100_300 \
+    -r $rdir \
+    -q $rdir \
     -o $rdir \
+    -n q20_40,q40_100,q100_300 \
     -g /Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human/genes.txt
 fi
 
@@ -142,8 +156,9 @@ if true; then
   popd
 fi
 
-# Step 5: Create the precision over recall plot.
+# Step 5: Create the precision over recall plots.
 if true; then
+  # create plot 1a
   outdir=$gdir/results/out
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
@@ -151,10 +166,30 @@ if true; then
     python $pytools/plot_seek1a.py -i $rdir -o $outdir -p $recall_pct
   done
 
+  # create plot 1c
   rdir=$gdir/results
   python $pytools/plot_seek1c.py -i $rdir -o $outdir
 fi
 
+# Step 6 - compare the results to the gold standard results
+if true; then
+  pytools="/Users/gwallace/src/github/gdoubleyew/genomics/pytools"
+  results="/Users/gwallace/src/github/FunctionLab/data/results"
 
-# Run SeekEvaluator again with different options
-#    - using pr_all, and then other options as the same.
+  result_files=("q20_40r10.txt" "q40_100r10.txt" "q100_300r10.txt" "precision_vs_depth.txt")
+  failed_tests=()
+
+  for rfile in ${result_files[*]}; do
+    echo $rfile
+    python $pytools/compare_result_files.py -a $results/bioinform_long/out/$rfile -b $results/bioinform1/out/$rfile
+    if [ $? -ne 0 ]; then
+      failed_tests+=($rfile)
+    fi
+  done
+  if [ ${#failed_tests[@]} -ne 0 ]; then
+    echo 'Tests failed ${failed_tests[*]}'
+    exit -1
+  fi
+fi
+
+# TODO - put in a sleipnir 'tests' directory and make all paths relative to that
