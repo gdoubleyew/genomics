@@ -29,11 +29,14 @@ def files_rank_correlation(fileA, fileB):
         B_rank = []
         # for each value in line A get the rank order in list A and B
         keys = list(A_dict_rank.keys())
+        max_rank = len(keys)
         for key in keys:
             A_rank.append(A_dict_rank[key])
-            B_rank.append(B_dict_rank.get(key, 0))
+            B_rank.append(B_dict_rank.get(key, max_rank))
         # calculate the spearman's correlation coefficient between the two rankings
         corr, _ = stats.spearmanr(A_rank, B_rank)
+        print(A_rank)
+        print(B_rank)
         correlations.append(corr)
 
     return correlations
