@@ -7,7 +7,6 @@ binPath - full path to seek binaries to test
 goldStdPath - full path to known-good output files and gold standard files for the test
 outputPath - output directory for the test results
 queryPath - full path to the query input directory
-queryFiles - query files to run (multiple queries per file one query per line), located in query path
 geneFile - file with list of all genes to include
 geneMap - gene map file
 recallPct - Recall depth (in percent) for calculating precision
@@ -19,6 +18,7 @@ import glob
 import time
 import argparse
 import utils
+from envbash import load_envbash
 import create_plot1a_filelists as filelist1a
 import create_plot1c_filelists as filelist1c
 import plot_seek1a as plot1a
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                            help='Expected results files from a known-good run')
     args = argParser.parse_args()
 
-    # Parse config file to get test cases to run
+    # Parse test config file
     cfg = utils.load_config_file(args.config)
 
     if args.seek_dir is not None:
@@ -63,9 +63,18 @@ if __name__ == "__main__":
     seekMinerBin = os.path.join(cfg.binPath, 'SeekMiner')
     seekEvaluatorBin = os.path.join(cfg.binPath, 'SeekEvaluator')
 
+    bashEnvironmentFile = os.path.join(cfg.seekPath, 'seek_env')
+    print('Load bash environment file {}'.format(bashEnvironmentFile))
+    load_envbash(bashEnvironmentFile)
+
+    # The query files have the query strings to run (multiple queries per file 
+    #   one query per line), located in query path
+    filepattern = os.path.join(cfg.queryPath, r'*.query.txt')
+    queryFiles = [queryfile for queryfile in glob.iglob(filepattern)]
+
     queryNames = []
     # Run SeekMiner for all query files
-    for file in cfg.queryFiles:
+    for file in queryFiles:
         path, file = os.path.split(file)
         # the first part of the query file name will be used for the result directory name
         queryName = file.split('.')[0]
@@ -89,7 +98,7 @@ if __name__ == "__main__":
     # Create filelists in preparation for running SeekEvaluator
     # create plot1a filelist
     for queryName in queryNames:
-        print('Create filelists for {}'.format(queryName))
+        print('Create filelists for plot1a {}'.format(queryName))
         goldDir = os.path.join(cfg.goldStdPath, queryName)
         resultDir = os.path.join(cfg.outputPath, queryName)
         outputDir = resultDir
@@ -97,6 +106,7 @@ if __name__ == "__main__":
                                        cfg.geneFile)
 
     # create plot1c filelist
+    print('Create filelists for plot1c')
     queryNamesStr = ','.join(map(str, queryNames))
     filelist1c.makePlot1cFilelists(cfg.goldStdPath, cfg.outputPath, cfg.outputPath,
                                    cfg.geneFile, queryNamesStr)
@@ -152,12 +162,18 @@ if __name__ == "__main__":
     plot1c.plot_curve(cfg.outputPath, cfg.outputPath)
 
     # Compare the results to known good
+    compare_errors = 0
     filepattern = os.path.join(cfg.goldStdPath, r'*.csv')
     for goldcsvfile in glob.iglob(filepattern):
         filename = os.path.basename(goldcsvfile)
         testcsvfile = os.path.join(cfg.outputPath, filename)
         pctdiff = cmpfiles.get_pct_error(goldcsvfile, testcsvfile,
                                          skiprows=1, skipcols=3)
-        print('Compare: {} {}'.format(testcsvfile, pctdiff))
+        print('Compare: {}, pct_diff {}'.format(filename, pctdiff))
         if pctdiff > cfg.maxPctDiff:
+            compare_errors += 1
             print('Failed: pct diff exceeded {}'.format(testcsvfile))
+    if compare_errors > 0:
+        sys.exit(-1)
+    sys.exit(0)
+
