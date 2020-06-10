@@ -14,8 +14,8 @@ setdir="/Genomics/ogtscratch/tmp/qzhu/modSeek/setting/human"
 pytools="/r04/gwallace/src/genomics/pytools"
 
 recall_pct=0.1
-# gmt_file="$gdir/human_go_slim.gmt"
-gmt_file="$gdir/qian_go_slim.gmt"
+gmt_file="$gdir/human_go_slim.gmt"
+# gmt_file="$gdir/qian_go_slim.gmt"
 
 # for group sizes 20-40 select query strings of size 2-10 (by 2s)
 # for group sizes 40-100 select query strings of size 2-20 (by 2s)
@@ -46,13 +46,13 @@ fi
 # This should only be done once when the test is created against a known
 #   good database. Thereafter set this to false because we use the same queries
 #   for comparing the results to the gold standard.
-makeQueries=false
-if $makeQueries; then
+if true; then
   check_dir "$gdir/queries"
   for i in ${!qgroups[@]}; do
     echo "${qgroups[$i]} ${qcounts[$i]}"
     cmd="$pytools/create_queries.py -min ${qmins[$i]} -max ${qmaxs[$i]} \
       -c ${qcounts[$i]} -o $gdir/queries/${qgroups[$i]} -i $gmt_file"
+    # add option --max-groups=20 to cap number of groups used
     echo $cmd
     python $cmd
   done
@@ -159,7 +159,7 @@ fi
 # Step 5: Create the precision over recall plots.
 if true; then
   # create plot 1a
-  outdir=$gdir/results/out
+  outdir=$gdir/results
   for group in ${qgroups[*]}; do
     rdir=$gdir/results/$group
     check_dir $outdir
@@ -172,7 +172,7 @@ if true; then
 fi
 
 # Step 6 - compare the results to the gold standard results
-if true; then
+if false; then
   pytools="/Users/gwallace/src/github/gdoubleyew/genomics/pytools"
   results="/Users/gwallace/src/github/FunctionLab/data/results"
 
