@@ -17,10 +17,13 @@ jobs:
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
         conda info --envs
+        conda list
         $CONDA/bin/activate base
+        conda list
+        python -c "import readline"
         $CONDA/bin/conda install -y numpy
         conda info --envs
         conda list
         python --version
         python -c "print('hello')"
-        python -c "import numpy as np"
+        python -c "import numpy"
