@@ -1,0 +1,26 @@
+name: Test Using Python
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install Python Dependencies
+      working-directory: ${{github.workspace}}
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+        conda info --envs
+        $CONDA/bin/activate base
+        $CONDA/bin/conda install -y numpy
+        conda info --envs
+        conda list
+        python --version
+        python -c "print('hello')"
+        python -c "import numpy as np"
