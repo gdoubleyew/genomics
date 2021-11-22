@@ -1,0 +1,13 @@
+name: Tag the latest Docker image when a release is created
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get the latest release name
+      run: echo "ref_name " ${{github.ref_name}}
+      
