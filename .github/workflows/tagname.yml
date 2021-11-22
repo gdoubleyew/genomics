@@ -1,7 +1,8 @@
 name: Tag the latest Docker image when a release is created
 
 on:
-  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
